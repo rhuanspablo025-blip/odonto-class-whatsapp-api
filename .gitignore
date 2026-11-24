@@ -1,0 +1,29 @@
+# ── Dependências e artefatos de build ───────────────────────────────────────
+node_modules
+dist
+coverage
+.vite
+.turbo
+
+# ── Variáveis de ambiente (NUNCA versionar) ─────────────────────────────────
+# Mantenha apenas o .env.example como referência.
+.env
+.env.*
+!.env.example
+
+# ── Credenciais/tokens locais ───────────────────────────────────────────────
+.local
+
+# ── Bancos SQLite locais e artefatos ────────────────────────────────────────
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# ── Logs e sistema ──────────────────────────────────────────────────────────
+*.log
+.DS_Store
+
+# ── Migrações do Drizzle ────────────────────────────────────────────────────
+# Os arquivos .sql e os metadados/snapshots em drizzle/ SÃO versionados
+# (fonte de verdade do schema). Não ignore drizzle/**.

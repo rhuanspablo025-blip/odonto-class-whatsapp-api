@@ -1,0 +1,28 @@
+# Contexto de build da imagem Docker (NÃO confundir com .gitignore).
+# Garante que segredos e artefatos locais nunca entrem na imagem.
+
+node_modules
+dist
+coverage
+
+# Segredos e configuração local — nunca versionar nem empacotar.
+.env
+.env.*
+!.env.example
+.local
+
+# Repositório e metadados.
+.git
+.gitignore
+.gitattributes
+
+# Logs e temporários.
+*.log
+.DS_Store
+.turbo
+.vite
+
+# Testes e ferramentas de desenvolvimento (não vão para a imagem).
+**/*.test.ts
+vitest.config.ts
+eslint.config.js
