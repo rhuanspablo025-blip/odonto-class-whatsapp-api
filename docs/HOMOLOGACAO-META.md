@@ -55,40 +55,67 @@ Variáveis obrigatórias (ver `.env.example` para a lista completa):
 
 ---
 
-## 3. Turso Cloud
+## 3. Turso Cloud — Homologação (Fase 13 concluída)
 
-> **BLOQUEIO ATUAL:** não há CLI `turso` nem token (`TURSO_API_TOKEN`) no
-> ambiente, e ambos os projetos ainda apontam para SQLite local. Os comandos
-> abaixo exigem credenciais e devem ser autorizados antes de executados.
+> **STATUS: CRIADO, MIGRADO E VALIDADO.**
 
-```bash
-# 1. Autenticar (uma vez).
-turso auth login
+| Item | Valor |
+|---|---|
+| Organização | `rhuanspablo025-blip` |
+| Banco | `odontoclass-api-staging` (dedicado a homologação) |
+| Grupo / Região | `default` / `aws-sa-east-1` |
+| URL pública (sem credenciais) | `libsql://odontoclass-api-staging-rhuanspablo025-blip.aws-sa-east-1.turso.io` |
+| Token | gerado pelo painel; armazenado apenas em `.env.staging` (ignorado pelo Git) |
+| Custo | plano Free — nenhum serviço pago contratado |
 
-# 2. Criar o banco de homogação (SEPARADO do de produção).
-turso db create odontoclass-api-staging --region aws-sa-east-1
+### Migrações aplicadas
 
-# 3. URL de conexão e token (guardar em cofre de segredos, nunca no repo).
-turso db show odontoclass-api-staging --url
-turso db tokens create odontoclass-api-staging
+As 4 migrações versionadas em `drizzle/` foram aplicadas com
+`npm run db:migrate`:
 
-# 4. Aplicar as migrations versionadas (4 arquivos em drizzle/).
-DATABASE_URL="libsql://odontoclass-api-staging-<org>.turso.io" \
-DATABASE_AUTH_TOKEN="<token>" \
-npm run db:migrate
+| # | Migração |
+|---|---|
+| 1 | `0000_nervous_bloodaxe` |
+| 2 | `0001_*` |
+| 3 | `0002_*` |
+| 4 | `0003_wise_guardian` |
 
-# 5. Conferir schema (deve resultar em 22 tabelas / 65 índices).
-turso db shell odontoclass-api-staging ".tables"
-```
+Registro confirmado em `__drizzle_migrations` (`count=4`).
 
-Regras:
+### Schema validado
+
+- **21 tabelas**
+- **45 índices**
+- **32 chaves estrangeiras** (compostas por `tenant_id`)
+- `PRAGMA foreign_key_check` → **0 violações**
+- `PRAGMA integrity_check` → **ok**
+
+### Testes operacionais reais (Turso Staging, dados fictícios)
+
+**28/28 PASS** via `app.inject()` + acesso direto ao banco remoto, cobrindo:
+autenticação 401, contatos, consentimentos, **isolamento multi-tenant**,
+webhook inbound + janela de 24h, **idempotência** (webhook e envio),
+dispatcher (SENT + job COMPLETED), status `DELIVERED` + custo,
+**concorrência** (sem duplicidade), **recovery** de lease expirado,
+campanhas, eventos/SSE, challenge do webhook, assinatura inválida (401) e
+cleanup em cascata.
+
+### Regras
+
 - **Não** modificar o banco `sistema-de-treino` nem `odontoclass-api` (produção).
 - Migrations são **idempotentes**, mas aplicá-las uma vez, como passo de
   release (não no boot de cada réplica, para evitar corrida).
 - **Nunca** copiar dados reais de pacientes para staging — usar o `seed` de
   desenvolvimento ou dados sintéticos.
-- Resultado esperado: `22 tabelas`, `65 índices`, 4 migrations na tabela
-  `__drizzle_migrations`.
+
+### Reprodução (ambiente com CLI/token próprios)
+
+```bash
+turso db create odontoclass-api-staging --region aws-sa-east-1   # já criado
+DATABASE_URL="libsql://odontoclass-api-staging-<org>.aws-sa-east-1.turso.io" \
+DATABASE_AUTH_TOKEN="<token>" \
+npm run db:migrate
+```
 
 ---
 
@@ -130,10 +157,9 @@ Recomendação: **Render** (Web Service + Background Worker separados) ou
 - **Controle de conexões:** rate limiting global (600 req/min por credencial/IP).
 - **Imagem:** multi-stage, usuário não-root, `HEALTHCHECK` embutido.
 
-> **AÇÃO NECESSÁRIA (release):** o `.gitignore` atual da API ignora
-> `drizzle/*.sql`. Se o deploy for feito a partir do Git, os SQL de migration
-> **não** subirão e `db:migrate` falhará. Remover essa linha do `.gitignore`
-> (ou versionar `drizzle/*.sql`) antes do primeiro deploy via Git.
+> **RESOLVIDO (Fase 13):** o `.gitignore` da API já versiona `drizzle/**`
+> (SQL + pasta `meta/`). A linha que ignorava `drizzle/*.sql` foi removida,
+> portanto as migrações sobem junto com o repositório no deploy via Git.
 
 ---
 
@@ -242,9 +268,14 @@ Antes de qualquer envio real, rodar tudo com `WHATSAPP_PROVIDER=test` e por
 
 ## 10. Pendências e bloqueios externos
 
-- **Turso:** CLI/token ausentes → criação do banco de staging não executada.
+- **Turso:** ~~CLI/token ausentes~~ → **RESOLVIDO.** Banco
+  `odontoclass-api-staging` criado, migrado (4 migrações) e validado
+  (21 tabelas / 45 índices / 32 FKs; 28/28 testes operacionais). Ver §3.
 - **Meta:** App ID, App Secret, Configuration ID, WABA, Phone Number ID e
   Business Verification não disponíveis → webhook real retorna 401 (correto).
+  Bloqueio primário: **registro de conta de desenvolvedor Meta e portfólio
+  empresarial (Web Plus)** ainda não realizados — exigem identidade e dados
+  cadastrais do titular.
 - **Credenciais de hospedagem:** nenhuma plataforma conectada; deploy não
   realizado (requer autorização e possível custo).
-- **Git:** `.gitignore` da API ignora `drizzle/*.sql` (ver §4).
+- **Git:** ~~`.gitignore` ignora `drizzle/*.sql`~~ → **RESOLVIDO** (ver §4).

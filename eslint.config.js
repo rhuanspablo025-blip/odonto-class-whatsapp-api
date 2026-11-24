@@ -7,8 +7,8 @@ import tseslint from "typescript-eslint";
  */
 export default tseslint.config(
   {
-    // Artefatos de build e migrations não são analisados.
-    ignores: ["dist/**", "node_modules/**", "drizzle/**", "coverage/**"],
+    // Artefatos de build, migrations e scripts locais não são analisados.
+    ignores: ["dist/**", "node_modules/**", "drizzle/**", "coverage/**", ".local/**"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
