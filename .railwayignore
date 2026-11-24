@@ -1,0 +1,26 @@
+# Contexto de upload do Railway CLI (railway up).
+# Espelha as exclusões do .gitignore/.dockerignore para garantir que
+# segredos e artefatos locais nunca sejam enviados no contexto de build.
+
+node_modules
+dist
+coverage
+
+# Segredos e configuração local.
+.env
+.env.*
+!.env.example
+.local
+
+# Repositório e metadados.
+.git
+.gitignore
+.gitattributes
+
+# Logs e temporários.
+*.log
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.DS_Store

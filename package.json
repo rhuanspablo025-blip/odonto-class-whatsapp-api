@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/database/migrate.ts",
-    "db:seed": "tsx src/database/seed.ts"
+    "db:seed": "tsx src/database/seed.ts",
+    "tenant:provision": "tsx src/database/provision-tenant.ts"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
